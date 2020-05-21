@@ -59,7 +59,11 @@ int start_hook_list(const fthinit_t *hook_list, size_t size)
 	int ret = 0, ret2 = 0;
 
 	for (i = 0; i < size; i++) {
-		symaddr = kallsyms_lookup_name(hook_list[i].symbol);
+		if (hook_list[i].symbol_name) {
+			symaddr = kallsyms_lookup_name(hook_list[i].symbol_name);
+		} else {
+			symaddr = hook_list[i].symbol_getter();
+		}
 
 		if (!symaddr)
 			ret = -1;
