@@ -13,8 +13,9 @@ int start_hook(fthook_t *hook, uintptr_t hooked_function, ftrace_fn hook_functio
 
 	ret = ftrace_set_filter_ip(&hook->ops, hook->original_function, 0, 0);
 
-	if (ret)
+	if (ret) {
 		return 1;
+	}
 
 	ret = register_ftrace_function(&hook->ops);
 
@@ -46,7 +47,7 @@ int start_hook_list(const fthinit_t *hook_list, size_t size)
 {
 	size_t i;
 	uintptr_t symaddr;
-	int ret = 0, ret2 = 0;
+	int ret = 0;
 
 	for (i = 0; i < size; i++) {
 		if (hook_list[i].symbol_name) {
@@ -55,16 +56,19 @@ int start_hook_list(const fthinit_t *hook_list, size_t size)
 			symaddr = hook_list[i].symbol_getter();
 		}
 
-		if (!symaddr)
-			ret = -1;
+		if (!symaddr) {
+			continue;
+		}
 
-		ret2 = start_hook(hook_list[i].hook, symaddr, hook_list[i].hook_function);
+		ret = start_hook(hook_list[i].hook, symaddr, hook_list[i].hook_function);
 
-		if (ret2)
-			ret = ret2;
+		if (ret) {
+			end_hook_list(hook_list, i);
+			return ret;
+		}
 	}
 
-	return ret;
+	return 0;
 }
 
 int end_hook_list(const fthinit_t *hook_list, size_t size)
