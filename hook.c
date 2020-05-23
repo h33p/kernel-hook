@@ -1,22 +1,12 @@
 #include "hook.h"
 
-static void notrace ftrace_thunk(unsigned long ip, unsigned long parent_ip,
-								 struct ftrace_ops *ops, struct pt_regs *regs)
-{
-	fthook_t *hook = container_of(ops, fthook_t, ops);
-
-	if (!within_module(parent_ip, THIS_MODULE))
-		regs->ip = (uintptr_t)hook->hook_function;
-}
-
-int start_hook(fthook_t *hook, uintptr_t hooked_function, void *hook_function)
+int start_hook(fthook_t *hook, uintptr_t hooked_function, ftrace_fn hook_function)
 {
 	int ret = 0;
 
 	hook->active = 0;
 	hook->original_function = hooked_function;
-	hook->hook_function = hook_function;
-	hook->ops.func = ftrace_thunk;
+	hook->ops.func = hook_function;
 	hook->ops.flags = FTRACE_OPS_FL_SAVE_REGS
 		| FTRACE_OPS_FL_RECURSION_SAFE
 		| FTRACE_OPS_FL_IPMODIFY;

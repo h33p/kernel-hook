@@ -96,7 +96,7 @@ static void vcpu_pre_run(struct kvm_vcpu *vcpu) {
 	preempt_enable();
 }
 
-DEFINE_STATIC_HOOK(int, kvm_emulate_cpuid, struct kvm_vcpu *vcpu)
+DEFINE_STATIC_FUNCTION_HOOK(int, kvm_emulate_cpuid, struct kvm_vcpu *vcpu)
 {
 	DEFINE_ORIGINAL(kvm_emulate_cpuid);
 
@@ -105,7 +105,12 @@ DEFINE_STATIC_HOOK(int, kvm_emulate_cpuid, struct kvm_vcpu *vcpu)
 	return orig_fn(vcpu);
 }
 
-DEFINE_STATIC_HOOK(void, kvm_vcpu_run, struct kvm_vcpu *vcpu)
+DEFINE_STATIC_INTERCEPT_HOOK(vmx_handle_exit)
+{
+
+}
+
+DEFINE_STATIC_FUNCTION_HOOK(void, kvm_vcpu_run, struct kvm_vcpu *vcpu)
 {
 	DEFINE_ORIGINAL(kvm_vcpu_run);
 
@@ -127,7 +132,8 @@ DEFINE_HOOK_GETTER(kvm_vcpu_run)
 
 static const fthinit_t hook_list[] = {
 	HLIST_NAME_ENTRY(kvm_emulate_cpuid),
-	HLIST_GETTER_ENTRY(kvm_vcpu_run)
+	HLIST_GETTER_ENTRY(kvm_vcpu_run),
+	HLIST_NAME_ENTRY(vmx_handle_exit)
 };
 
 static int vmhook_init(void)
